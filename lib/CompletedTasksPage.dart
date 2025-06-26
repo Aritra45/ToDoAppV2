@@ -67,15 +67,16 @@ class _CompletedTasksPageState extends State<CompletedTasksPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.bug_report),
+        child: const Icon(Icons.bug_report),
         onPressed: () async {
           await NotificationService.scheduleNotification(
             id: 999,
             title: "🧪 Test Notification",
             body: "This is a debug notification",
-            scheduledDate: DateTime.now().add(Duration(seconds: 30)),
+            scheduledDate: DateTime.now().add(const Duration(seconds: 2)),
           );
-          Fluttertoast.showToast(msg: "🧪 Debug notification scheduled");
+          Fluttertoast.showToast(
+              msg: "🧪 Debug notification scheduled (in 30s)");
         },
       ),
     );

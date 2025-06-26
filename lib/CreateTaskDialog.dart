@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:todoapp/notification_service.dart'; // ✅ Use your service
@@ -111,55 +110,50 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     setState(() => _isLoading = true);
 
     try {
-      // Fetch device FCM token (make sure you've initialized FirebaseMessaging!)
-      final token = await FirebaseMessaging.instance.getToken();
-      if (token == null) {
-        Fluttertoast.showToast(msg: "⚠ Could not retrieve FCM token");
-        return;
-      }
+      // Schedule local notification first
+      await _scheduleLocalNotification(title, _startTime!);
+      Fluttertoast.showToast(msg: "⏰ Notification scheduled for $_startTime");
 
-      await FirebaseFirestore.instance
-          .collection('scheduled_notifications')
-          .add({
+      // Save to Firestore only if scheduling succeeds
+      await FirebaseFirestore.instance.collection('tasks').add({
         'title': title,
-        'token': token,
-        'scheduledTime': _startTime,
+        'startTime': _startTime,
+        'completed': false,
         'createdAt': FieldValue.serverTimestamp(),
-        'isSent': false,
+        'completedAt': null,
       });
-
-      Fluttertoast.showToast(
-          msg: "⏰ Notification scheduled on server for $_startTime");
 
       if (context.mounted) Navigator.pop(context, true);
     } catch (e) {
-      debugPrint("Error scheduling via Firebase: $e");
+      debugPrint("Notification scheduling failed: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // Future<void> _scheduleLocalNotification(String title, DateTime time) async {
-  //   final now = DateTime.now();
-  //   final scheduled = tz.TZDateTime.from(time, tz.local);
+  Future<void> _scheduleLocalNotification(String title, DateTime time) async {
+    final now = DateTime.now();
+    final scheduled = tz.TZDateTime.from(time, tz.local);
 
-  //   if (scheduled.isBefore(
-  //       tz.TZDateTime.from(now.add(Duration(seconds: 5)), tz.local))) {
-  //     Fluttertoast.showToast(
-  //       msg: "⚠ Please select a valid future time",
-  //       toastLength: Toast.LENGTH_LONG,
-  //       gravity: ToastGravity.BOTTOM,
-  //       backgroundColor: Colors.red,
-  //       textColor: Colors.white,
-  //     );
-  //     throw ArgumentError("Scheduled time must be in the future");
-  //   }
+    if (scheduled.isBefore(
+        tz.TZDateTime.from(now.add(Duration(seconds: 5)), tz.local))) {
+      Fluttertoast.showToast(
+        msg: "⚠ Please select a valid future time",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+      throw ArgumentError("Scheduled time must be in the future");
+    }
 
-  //   await NotificationService.scheduleNotification(
-  //     id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-  //     title: "⏰ Task Reminder",
-  //     body: title,
-  //     scheduledDate: time,
-  //   );
-  // }
+    final String bodyText = "Hey Baby, 📝 Your task \"$title\" starts now!";
+
+    await NotificationService.scheduleNotification(
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title: title,
+      body: bodyText,
+      scheduledDate: time,
+    );
+  }
 }

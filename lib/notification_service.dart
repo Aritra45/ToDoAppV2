@@ -11,20 +11,20 @@ class NotificationService {
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
 
-    // Notification initialization settings
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    // Notification init settings
+    const androidInit = AndroidInitializationSettings('@mipmap/logo');
     const initSettings = InitializationSettings(android: androidInit);
 
     await _plugin.initialize(initSettings);
 
-    // Create notification channel
+    // Create notification channel (Android 8+)
     await _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(
           const AndroidNotificationChannel(
-            'task_channel', // ID
-            'Task Notifications', // Name
+            'task_channel',
+            'Task Notifications',
             importance: Importance.max,
           ),
         );
@@ -36,7 +36,8 @@ class NotificationService {
     required String body,
     required DateTime scheduledDate,
   }) async {
-    final tzDateTime = tz.TZDateTime.from(scheduledDate, tz.local);
+    final tz.TZDateTime tzDateTime =
+        tz.TZDateTime.from(scheduledDate, tz.local);
 
     await _plugin.zonedSchedule(
       id,

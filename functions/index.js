@@ -1,43 +1,60 @@
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+
 admin.initializeApp();
 
-const db = admin.firestore();
-
 exports.sendScheduledNotifications = functions.pubsub
-  .schedule('every 1 minutes')
-  .onRun(async () => {
-    const now = new Date();
-    const querySnapshot = await db
-      .collection('scheduled_notifications')
-      .where('scheduledTime', '<=', now)
-      .where('isSent', '==', false)
+  .schedule("every 1 minutes").onRun(async (context) => {
+    const now = admin.firestore.Timestamp.now();
+
+    const snapshot = await admin.firestore().collection("tasks")
+      .where("startTime", "<=", now)
+      .where("isSent", "==", false)
       .get();
 
-    const sendPromises = [];
+    if (snapshot.empty) {
+      console.log("✅ No tasks to notify at this time.");
+      return null;
+    }
 
-    querySnapshot.forEach(doc => {
+    const promises = [];
+
+    snapshot.forEach((doc) => {
       const data = doc.data();
       const token = data.token;
-      const title = data.title ?? 'Reminder';
+
+      if (!token) return;
 
       const message = {
         token,
         notification: {
-          title: '⏰ Task Reminder',
-          body: title,
+          title: "⏰ Task Reminder",
+          body: data.title || "You have a task scheduled now.",
+        },
+        android: {
+          priority: "high",
+        },
+        apns: {
+          payload: {
+            aps: {
+              sound: "default",
+            },
+          },
         },
       };
 
-      sendPromises.push(
-        admin.messaging().send(message).then(() => {
-          return doc.ref.update({ isSent: true, sentAt: new Date() });
-        }).catch(err => {
-          console.error(`Failed to send notification to ${token}:`, err);
+      const p = admin.messaging().send(message)
+        .then(() => {
+          console.log("📬 Sent to:", token);
+          return doc.ref.update({ isSent: true });
         })
-      );
+        .catch((err) => {
+          console.error("❌ Failed to send to token:", token, err);
+        });
+
+      promises.push(p);
     });
 
-    await Promise.all(sendPromises);
-    console.log(`✅ Processed ${sendPromises.length} notifications.`);
+    await Promise.all(promises);
+    return null;
   });

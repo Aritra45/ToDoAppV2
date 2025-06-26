@@ -8,36 +8,53 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
-        android:name="${applicationName}"
-        android:label="Lizu Tasks"
-        android:icon="@mipmap/logo"
-        android:usesCleartextTraffic="true">
+    android:name="${applicationName}"
+    android:label="Lizu Tasks"
+    android:icon="@mipmap/logo"
+    android:usesCleartextTraffic="true">
 
-        <activity
-            android:name=".MainActivity"
-            android:launchMode="singleTop"
-            android:exported="true"
-            android:theme="@style/LaunchTheme"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
-            android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize">
+    <activity
+        android:name=".MainActivity"
+        android:launchMode="singleTop"
+        android:exported="true"
+        android:theme="@style/LaunchTheme"
+        android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+        android:hardwareAccelerated="true"
+        android:windowSoftInputMode="adjustResize">
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
 
-            <meta-data
-                android:name="io.flutter.embedding.android.NormalTheme"
-                android:resource="@style/NormalTheme" />
-        </activity>
-
-        <!-- Required by Flutter plugins -->
         <meta-data
-            android:name="flutterEmbedding"
-            android:value="2" />
+            android:name="io.flutter.embedding.android.NormalTheme"
+            android:resource="@style/NormalTheme" />
+    </activity>
 
-    </application>
+    <!-- ✅ Add these receivers -->
+    <receiver
+        android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
+        android:exported="true"
+        android:enabled="true"/>
+
+    <receiver
+        android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+        android:exported="true"
+        android:enabled="true">
+        <intent-filter>
+            <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+        </intent-filter>
+    </receiver>
+
+    <!-- Required by Flutter plugins -->
+    <meta-data
+        android:name="flutterEmbedding"
+        android:value="2" />
+
+</application>
+
 
     <!-- Allow querying apps that can process text -->
     <queries>
