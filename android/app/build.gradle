@@ -1,0 +1,36 @@
+plugins {
+    id "com.android.application"
+    id "org.jetbrains.kotlin.android" // ✅ updated to the proper plugin name
+    id "com.google.gms.google-services" // ✅ Firebase
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+android {
+    namespace "com.example.todoapp"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.example.todoapp"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+flutter {
+    source "../.."
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.22" // ✅ match with root build.gradle
+}
